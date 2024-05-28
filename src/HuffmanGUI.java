@@ -59,8 +59,9 @@ public class HuffmanGUI extends JFrame {
                         Files.createDirectory(outputDir);
                     }
                     Files.write(outputDir.resolve("encoded.bin"), encodedBytes);
+                    Files.write(outputDir.resolve("encoded.txt"), encodedBytes);
 
-                    outputTextArea.setText("Encoded data saved to encoded.bin");
+                    outputTextArea.setText("Encoded data saved to encoded.bin and encoded.txt");
 
                 } catch (IOException ex) {
                     ex.printStackTrace();
