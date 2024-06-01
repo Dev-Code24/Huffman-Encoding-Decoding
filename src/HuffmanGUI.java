@@ -2,67 +2,106 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.nio.file.*;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HuffmanGUI extends JFrame {
-    private JTextArea inputTextArea;
-    private JTextArea outputTextArea;
+    private HuffmanEncoder encoder;
+    private DefaultListModel<String> fileListModel;
+    private JList<String> fileList;
+    private JButton loadInputButton;
+    private JButton selectOutputDirButton;
     private JButton encodeButton;
     private JButton decodeButton;
-    private JButton loadButton;
-    private JButton saveButton;
+    private List<File> selectedFiles;
+    private File outputDir;
 
     public HuffmanGUI() {
+        encoder = new HuffmanEncoder();
         setTitle("Huffman Encoder/Decoder");
-        setSize(800, 600);
+        setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        inputTextArea = new JTextArea();
-        outputTextArea = new JTextArea();
+        fileListModel = new DefaultListModel<>();
+        fileList = new JList<>(fileListModel);
+        JScrollPane fileListScrollPane = new JScrollPane(fileList);
+
+        loadInputButton = new JButton("Load Input");
+        selectOutputDirButton = new JButton("Select Output Directory");
         encodeButton = new JButton("Encode");
         decodeButton = new JButton("Decode");
-        loadButton = new JButton("Load Input");
-        saveButton = new JButton("Save Output");
-
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(1, 2));
-        panel.add(new JScrollPane(inputTextArea));
-        panel.add(new JScrollPane(outputTextArea));
+        encodeButton.setEnabled(false); // Initially disable encode button
+        decodeButton.setEnabled(false); // Initially disable decode button
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new GridLayout(1, 4));
-        buttonPanel.add(loadButton);
+        buttonPanel.add(loadInputButton);
+        buttonPanel.add(selectOutputDirButton);
         buttonPanel.add(encodeButton);
         buttonPanel.add(decodeButton);
-        buttonPanel.add(saveButton);
 
-        add(panel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(fileListScrollPane, BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(mainPanel);
+
+        selectedFiles = new ArrayList<>();
 
         addListeners();
     }
 
     private void addListeners() {
+        loadInputButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setMultiSelectionEnabled(true);
+                int result = fileChooser.showOpenDialog(HuffmanGUI.this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File[] files = fileChooser.getSelectedFiles();
+                    selectedFiles.clear();
+                    fileListModel.clear();
+                    for (File file : files) {
+                        selectedFiles.add(file);
+                        fileListModel.addElement(file.getName() + " - " + file.getAbsolutePath());
+                    }
+                    encodeButton.setEnabled(outputDir != null); // Enable encode button if output directory is selected
+                }
+            }
+        });
+
+        selectOutputDirButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser dirChooser = new JFileChooser();
+                dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                int result = dirChooser.showOpenDialog(HuffmanGUI.this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    outputDir = dirChooser.getSelectedFile();
+                    JOptionPane.showMessageDialog(HuffmanGUI.this, "Output directory selected: " + outputDir.getAbsolutePath());
+                    encodeButton.setEnabled(!selectedFiles.isEmpty()); // Enable encode button if files are selected
+                }
+            }
+        });
+
         encodeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String inputText = inputTextArea.getText();
-                    HuffmanEncoder encoder = new HuffmanEncoder();
-                    encoder.buildHuffmanTree(inputText);
-                    byte[] encodedBytes = encoder.encode(inputText);
-
-                    // Save the encoded data to a file
-                    Path outputDir = Paths.get("output");
-                    if (!Files.exists(outputDir)) {
-                        Files.createDirectory(outputDir);
+                    if (outputDir == null) {
+                        JOptionPane.showMessageDialog(HuffmanGUI.this, "Please select an output directory first.");
+                        return;
                     }
-                    Files.write(outputDir.resolve("encoded.bin"), encodedBytes);
-                    Files.write(outputDir.resolve("encoded.txt"), encodedBytes);
-
-                    outputTextArea.setText("Encoded data saved to encoded.bin and encoded.txt");
-
+                    for (File file : selectedFiles) {
+                        String inputText = new String(Files.readAllBytes(file.toPath()));
+                        encoder.buildHuffmanTree(inputText);
+                        byte[] encodedBytes = encoder.encode(inputText);
+                        Files.write(outputDir.toPath().resolve(file.getName() + ".bin"), encodedBytes);
+                    }
+                    JOptionPane.showMessageDialog(HuffmanGUI.this, "Encoding completed for selected files.");
+                    decodeButton.setEnabled(true); // Enable decode button after encoding
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -72,57 +111,22 @@ public class HuffmanGUI extends JFrame {
         decodeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    // Read encoded data from the file
-                    Path encodedFilePath = Paths.get("output/encoded.bin");
-                    byte[] encodedBytes = Files.readAllBytes(encodedFilePath);
-
-                    // Decode the encoded data
-                    HuffmanEncoder encoder = new HuffmanEncoder();
-                    String inputText = inputTextArea.getText();
-                    encoder.buildHuffmanTree(inputText); // Build tree with the same input
-                    HuffmanDecoder decoder = new HuffmanDecoder(encoder.getRoot());
-                    String decodedText = decoder.decode(encodedBytes);
-
-                    outputTextArea.setText(decodedText);
-
-                    // Save the decoded text to a file
-                    Path outputDir = Paths.get("output");
-                    Files.write(outputDir.resolve("decoded.txt"), decodedText.getBytes());
-
+                    if (outputDir == null) {
+                        JOptionPane.showMessageDialog(HuffmanGUI.this, "Please select an output directory first.");
+                        return;
+                    }
+                    for (File file : selectedFiles) {
+                        File encodedFile = new File(outputDir.toPath().resolve(file.getName() + ".bin").toString());
+                        if (encodedFile.exists()) {
+                            byte[] encodedBytes = Files.readAllBytes(encodedFile.toPath());
+                            HuffmanDecoder decoder = new HuffmanDecoder(encoder.getRoot());
+                            String decodedText = decoder.decode(encodedBytes);
+                            Files.write(outputDir.toPath().resolve(file.getName() + "_decoded.txt"), decodedText.getBytes());
+                        }
+                    }
+                    JOptionPane.showMessageDialog(HuffmanGUI.this, "Decoding completed for selected files.");
                 } catch (IOException ex) {
                     ex.printStackTrace();
-                }
-            }
-        });
-
-        loadButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                int result = fileChooser.showOpenDialog(HuffmanGUI.this);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    try {
-                        Path filePath = fileChooser.getSelectedFile().toPath();
-                        String content = new String(Files.readAllBytes(filePath));
-                        inputTextArea.setText(content);
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        saveButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                int result = fileChooser.showSaveDialog(HuffmanGUI.this);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    try {
-                        Path filePath = fileChooser.getSelectedFile().toPath();
-                        String content = outputTextArea.getText();
-                        Files.write(filePath, content.getBytes());
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
                 }
             }
         });
@@ -136,3 +140,4 @@ public class HuffmanGUI extends JFrame {
         });
     }
 }
+

@@ -32,7 +32,8 @@ public class HuffmanEncoder {
     }
 
     private void generateHuffmanCodes(Node root, String code) {
-        if (root == null) return;
+        if (root == null)
+            return;
         if (root.left == null && root.right == null) {
             huffmanCode.put(root.character, code);
         }
@@ -69,5 +70,3 @@ public class HuffmanEncoder {
         return result;
     }
 }
-
-

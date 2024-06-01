@@ -15,7 +15,19 @@ public class HuffmanDecoder {
         Node currentNode = root;
         for (int i = 0; i < binaryString.length(); i++) {
             char bit = binaryString.charAt(i);
-            currentNode = (bit == '0') ? currentNode.left : currentNode.right;
+            if (bit == '0') {
+                if (currentNode.left != null) {
+                    currentNode = currentNode.left;
+                } else {
+                    currentNode = root;
+                }
+            } else {
+                if (currentNode.right != null) {
+                    currentNode = currentNode.right;
+                } else {
+                    currentNode = root;
+                }
+            }
             if (currentNode.left == null && currentNode.right == null) {
                 decodedString.append(currentNode.character);
                 currentNode = root;
