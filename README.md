@@ -14,8 +14,11 @@ java -cp HuffmanGUI
 
 ## Demo
 
-##### Using the GUI
+##### Using without multithreading for encoding-decoding
 
 https://github.com/Dev-Code24/Huffman-Encoding-Decoding/assets/97425135/00d96b86-abf1-47cf-89e7-33db97dd2414
 
+##### Using multithreading for encoding-decoding
+
+https://github.com/Dev-Code24/Huffman-Encoding-Decoding/assets/97425135/7883c0d1-e546-4778-8bb8-cb7ca75ea039
 
