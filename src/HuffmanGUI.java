@@ -3,7 +3,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,7 +87,8 @@ public class HuffmanGUI extends JFrame {
                 int result = dirChooser.showOpenDialog(HuffmanGUI.this);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     outputDir = dirChooser.getSelectedFile();
-                    JOptionPane.showMessageDialog(HuffmanGUI.this, "Output directory selected: " + outputDir.getAbsolutePath());
+                    JOptionPane.showMessageDialog(HuffmanGUI.this,
+                            "Output directory selected: " + outputDir.getAbsolutePath());
                     encodeButton.setEnabled(!selectedFiles.isEmpty()); // Enable encode button if files are selected
                 }
             }
@@ -89,47 +96,58 @@ public class HuffmanGUI extends JFrame {
 
         encodeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                try {
-                    if (outputDir == null) {
-                        JOptionPane.showMessageDialog(HuffmanGUI.this, "Please select an output directory first.");
-                        return;
+                // Iterate over selected files
+                for (File file : selectedFiles) {
+                    try {
+                        // Read file content using InputStream
+                        try (InputStream inputStream = new FileInputStream(file)) {
+                            byte[] inputBytes = new byte[(int) file.length()];
+                            inputStream.read(inputBytes);
+
+                            // Encode file content
+                            encoder.buildHuffmanTree(new String(inputBytes));
+                            byte[] encodedBytes = encoder.encode(new String(inputBytes));
+
+                            // Write encoded data to output file
+                            try (OutputStream outputStream = new FileOutputStream(
+                                    outputDir.toPath().resolve(file.getName() + ".bin").toFile())) {
+                                outputStream.write(encodedBytes);
+                            }
+                        }
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
                     }
-                    for (File file : selectedFiles) {
-                        String inputText = new String(Files.readAllBytes(file.toPath()));
-                        encoder.buildHuffmanTree(inputText);
-                        byte[] encodedBytes = encoder.encode(inputText);
-                        Files.write(outputDir.toPath().resolve(file.getName() + ".bin"), encodedBytes);
-                    }
-                    JOptionPane.showMessageDialog(HuffmanGUI.this, "Encoding completed for selected files.");
-                    decodeButton.setEnabled(true); // Enable decode button after encoding
-                } catch (IOException ex) {
-                    ex.printStackTrace();
                 }
+                JOptionPane.showMessageDialog(HuffmanGUI.this, "Encoding completed for selected files.");
+                decodeButton.setEnabled(true); // Enable decode button after encoding
             }
         });
 
         decodeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                try {
-                    if (outputDir == null) {
-                        JOptionPane.showMessageDialog(HuffmanGUI.this, "Please select an output directory first.");
-                        return;
-                    }
-                    for (File file : selectedFiles) {
-                        File encodedFile = new File(outputDir.toPath().resolve(file.getName() + ".bin").toString());
-                        if (encodedFile.exists()) {
-                            byte[] encodedBytes = Files.readAllBytes(encodedFile.toPath());
-                            HuffmanDecoder decoder = new HuffmanDecoder(encoder.getRoot());
-                            String decodedText = decoder.decode(encodedBytes);
-                            Files.write(outputDir.toPath().resolve(file.getName() + "_decoded.txt"), decodedText.getBytes());
+                // Iterate over selected files
+                for (File file : selectedFiles) {
+                    try {
+                        // Read encoded file content
+                        byte[] encodedBytes = Files.readAllBytes(outputDir.toPath().resolve(file.getName() + ".bin"));
+
+                        // Decode the encoded data
+                        HuffmanDecoder decoder = new HuffmanDecoder(encoder.getRoot());
+                        String decodedText = decoder.decode(encodedBytes);
+
+                        // Write decoded data to output file
+                        try (Writer writer = new FileWriter(
+                                outputDir.toPath().resolve(file.getName() + "_decoded.txt").toFile())) {
+                            writer.write(decodedText);
                         }
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
                     }
-                    JOptionPane.showMessageDialog(HuffmanGUI.this, "Decoding completed for selected files.");
-                } catch (IOException ex) {
-                    ex.printStackTrace();
                 }
+                JOptionPane.showMessageDialog(HuffmanGUI.this, "Decoding completed for selected files.");
             }
         });
+
     }
 
     public static void main(String[] args) {
@@ -140,4 +158,3 @@ public class HuffmanGUI extends JFrame {
         });
     }
 }
-
