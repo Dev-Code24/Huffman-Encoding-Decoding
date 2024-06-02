@@ -9,7 +9,11 @@ The program supports multi-file encoding/decoding at once.
 
 ```sh
 // Open the terminal in the root of the repository then run
-java -cp HuffmanGUI
+// Following is to run without using the multithreading feature
+java -cp src HuffmanGUI
+
+// Following is to run with the multithreading feature
+java -cp src_multithreaded HuffmanGUI
 ```
 
 ## Demo
