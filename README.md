@@ -1,4 +1,4 @@
-# Huffman-Encoding-Decoding
+# Huffman Compression Tool
 
 This is a project for me to learn about lossless file compression using Huffman Encoding/Decoding
 The program supports multi-file encoding/decoding at once.
