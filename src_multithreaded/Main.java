@@ -28,7 +28,7 @@ public class Main {
                         String chunk = chunks.get(i);
                         byte[] encodedData = encoder.encode(chunk);
                         encodedChunks.add(encodedData);
-                        System.out.println("Encoded chunk " + i + ": " + new String(encodedData)); // Debugging
+                        System.out.println("Encoded chunk " + i + ": " + new String(encodedData)); 
                     }
 
                     // Write encoded chunks to output files
@@ -36,7 +36,7 @@ public class Main {
                         byte[] encodedData = encodedChunks.get(i);
                         Path outputFile = outputDir.resolve(file.getFileName() + "_chunk" + i + "_encoded.bin");
                         Files.write(outputFile, encodedData);
-                        System.out.println("Encoded chunk " + i + " written to file: " + outputFile); // Debugging
+                        System.out.println("Encoded chunk " + i + " written to file: " + outputFile); 
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

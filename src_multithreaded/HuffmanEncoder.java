@@ -37,7 +37,7 @@ public class HuffmanEncoder {
         }
         if (root.left == null && root.right == null) {
             huffmanCode.put(root.character, code);
-            System.out.println("Character: " + root.character + ", Code: " + code); // Debugging
+            System.out.println("Character: " + root.character + ", Code: " + code); 
         }
         generateHuffmanCodes(root.left, code + '0');
         generateHuffmanCodes(root.right, code + '1');
@@ -48,7 +48,7 @@ public class HuffmanEncoder {
         for (char ch : text.toCharArray()) {
             encodedString.append(huffmanCode.get(ch));
         }
-      //  System.out.println("Encoded String: " + encodedString.toString()); // Debugging
+      //  System.out.println("Encoded String: " + encodedString.toString()); 
         return getBytesFromBinaryString(encodedString.toString());
     }
 

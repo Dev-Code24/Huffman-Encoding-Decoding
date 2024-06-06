@@ -146,7 +146,7 @@ public class HuffmanGUI extends JFrame {
                                         start = end;
                                     }
                                 }
-                                System.out.println("Decoded file written to: " + outputFile); // Debugging
+                                System.out.println("Decoded file written to: " + outputFile); 
                             } catch (IOException ex) {
                                 ex.printStackTrace();
                             }
