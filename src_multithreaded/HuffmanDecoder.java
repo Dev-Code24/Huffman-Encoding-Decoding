@@ -33,7 +33,7 @@ public class HuffmanDecoder {
                 currentNode = root;
             }
         }
-        // System.out.println("Decoded String: " + decodedString.toString()); // Debugging
+        // System.out.println("Decoded String: " + decodedString.toString());
         return decodedString.toString();
     }
 }
